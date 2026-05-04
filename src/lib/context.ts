@@ -338,7 +338,7 @@ export const autoZoom = persistentAtom<boolean>("autoZoom", true, {
 export const isLoading = atom<boolean>(false);
 
 export const baseTileLayer = persistentAtom<
-    "voyager" | "light" | "dark" | "transport" | "neighbourhood" | "osmcarto"
+    "voyager" | "light" | "dark" | "transport" | "neighbourhood" | "osmcarto" | "googlemaps"
 >("baseTileLayer", "voyager");
 export const thunderforestApiKey = persistentAtom<string>(
     "thunderforestApiKey",

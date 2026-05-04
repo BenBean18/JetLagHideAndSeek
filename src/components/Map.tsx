@@ -6,7 +6,7 @@ import { useStore } from "@nanostores/react";
 import * as turf from "@turf/turf";
 import * as L from "leaflet";
 import { useEffect, useMemo } from "react";
-import { MapContainer, ScaleControl, TileLayer } from "react-leaflet";
+import { LayersControl,MapContainer, ScaleControl, TileLayer } from "react-leaflet";
 import { toast } from "react-toastify";
 
 import {
@@ -97,6 +97,17 @@ const getTileLayer = (tileLayer: string, thunderforestApiKey: string) => {
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors; Powered by Esri and Turf.js'
                     url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                     maxZoom={19}
+                    minZoom={2}
+                    noWrap
+                />
+            );
+        
+        case "googlemaps":
+            return (
+                <TileLayer
+                    attribution='None &#x1f3f4;&#x200d;&#x2620;&#xfe0f;'
+                    url="https://mts1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&scale=2"
+                    maxZoom={21}
                     minZoom={2}
                     noWrap
                 />
@@ -368,27 +379,94 @@ export const Map = ({ className }: { className?: string }) => {
                     },
                 ]}
             >
-                {getTileLayer($baseTileLayer, $thunderforestApiKey)}
-                <DraggableMarkers />
-                <div className="leaflet-top leaflet-right">
-                    <div className="leaflet-control flex-col flex gap-2">
-                        <LeafletFullScreenButton />
+                <LayersControl position="topright">
+                    <LayersControl.BaseLayer checked={$baseTileLayer === "light"} name="Carto Light">
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors; &copy; <a href="https://carto.com/attributions">CARTO</a>; Powered by Esri and Turf.js'
+                            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                            subdomains="abcd"
+                            maxZoom={20} // This technically should be 6, but once the ratelimiting starts this can take over
+                            minZoom={2}
+                            noWrap
+                        />
+                    </LayersControl.BaseLayer>
+                    <LayersControl.BaseLayer checked={$baseTileLayer === "dark"} name="Carto Dark">
+                            <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors; &copy; <a href="https://carto.com/attributions">CARTO</a>; Powered by Esri and Turf.js'
+                            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                            subdomains="abcd"
+                            maxZoom={20} // This technically should be 6, but once the ratelimiting starts this can take over
+                            minZoom={2}
+                            noWrap
+                        />
+                    </LayersControl.BaseLayer>
+                    <LayersControl.BaseLayer checked={$baseTileLayer === "neighbourhood"} name="Thunderforest Neighborhood">
+                        <TileLayer
+                            url={`https://tile.thunderforest.com/neighbourhood/{z}/{x}/{y}.png?apikey=${$thunderforestApiKey}`}
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors; &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>; Powered by Esri and Turf.js'
+                            maxZoom={22}
+                            minZoom={2}
+                            noWrap
+                        />
+                    </LayersControl.BaseLayer>
+                    <LayersControl.BaseLayer checked={$baseTileLayer === "osmcarto"} name="OSM">
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors; Powered by Esri and Turf.js'
+                            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            maxZoom={19}
+                            minZoom={2}
+                            noWrap
+                        />
+                    </LayersControl.BaseLayer>
+                    <LayersControl.BaseLayer checked={$baseTileLayer === "googlemaps"} name="Google Maps">
+                        <TileLayer
+                            attribution='None &#x1f3f4;&#x200d;&#x2620;&#xfe0f;'
+                            url="https://mts1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&scale=2" /* =s for satellite, =y for hybrid */
+                            maxZoom={21}
+                            minZoom={2}
+                            noWrap
+                        />
+                    </LayersControl.BaseLayer>
+                    <LayersControl.BaseLayer checked={$baseTileLayer === "transport"} name="Thunderforest Transport">
+                        <TileLayer
+                            url={`https://tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=${$thunderforestApiKey}`}
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors; &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>; Powered by Esri and Turf.js'
+                            maxZoom={22}
+                            minZoom={2}
+                            noWrap
+                        />
+                    </LayersControl.BaseLayer>
+                    <LayersControl.Overlay checked={$baseTileLayer !== "transport"} name="Railways">
+                        <TileLayer
+                            url={`https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png `}
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors; &copy; <a href="http://www.thunderforest.com/">Thunderforest</a>; Powered by Esri and Turf.js'
+                            maxZoom={22}
+                            minZoom={2}
+                            noWrap
+                        />
+                    </LayersControl.Overlay>
+                    /* https://wiki.openstreetmap.org/wiki/Raster_tile_providers#Overlay_tiles */
+                    <DraggableMarkers />
+                    <div className="leaflet-top leaflet-right">
+                        <div className="leaflet-control flex-col flex gap-2">
+                            <LeafletFullScreenButton />
+                        </div>
                     </div>
-                </div>
-                <PolygonDraw />
-                <ScaleControl position="bottomleft" />
-                <MapPrint
-                    position="topright"
-                    sizeModes={["Current", "A4Portrait", "A4Landscape"]}
-                    hideControlContainer={false}
-                    hideClasses={[
-                        "leaflet-full-screen-specific-name",
-                        "leaflet-top",
-                        "leaflet-control-easyPrint",
-                        "leaflet-draw",
-                    ]}
-                    title="Print"
-                />
+                    <PolygonDraw />
+                    <ScaleControl position="bottomleft" />
+                    <MapPrint
+                        position="topright"
+                        sizeModes={["Current", "A4Portrait", "A4Landscape"]}
+                        hideControlContainer={false}
+                        hideClasses={[
+                            "leaflet-full-screen-specific-name",
+                            "leaflet-top",
+                            "leaflet-control-easyPrint",
+                            "leaflet-draw",
+                        ]}
+                        title="Print"
+                    />
+                </LayersControl>
             </MapContainer>
         ),
         [map, $baseTileLayer, $thunderforestApiKey],

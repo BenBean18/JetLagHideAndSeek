@@ -443,6 +443,7 @@ export const OptionDrawers = ({ className }: { className?: string }) => {
                                     neighbourhood:
                                         "Thunderforest Neighbourhood",
                                     osmcarto: "OpenStreetMap Carto",
+                                    googlemaps: "Google Maps (Satellite)",
                                 }}
                                 value={$baseTileLayer}
                                 onValueChange={(v) =>
